@@ -1,7 +1,580 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 1 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+
+  table.matrix {
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid black;
+    border-radius: 6px;
+    border-style: none solid none solid;
+  }
+  table.matrix td {
+    padding: 10px;
+    text-align: center;
+  }
+
+  table.frac {
+    margin: 0 auto;
+  }
+
+  table.frac td {
+    padding: 1px;
+    text-align: center;
+  }
+
+  .centered{
+    margin: 0 auto;
+  }
+</style>
+<script>
+  var rev = false;
+  function toggle(){
+      var im = document.getElementById("jortson");
+      if (rev) {
+          im.src = "images/task3/Jortson.gif"
+          rev = false;
+      } else {
+          im.src = "images/task3/Jortson-Rev.gif"
+          rev=true;
+      }
+  }
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+
+<title>CS 184 Rasterizer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2018</h1>
+<h1 align="middle">Project 1: Rasterizer</h1>
+<h2 align="middle">Gregoria Millensifer, Tristan Streichenberger, CS184-SP22</h2>
+
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p>
+  In this project we implemented basic triangle
+  rasterization, which is the process of drawing
+  a triangle onto the screen, given the verteces
+  of the triangle. We also explored several methods of
+  implementing antialiasing including super sampling
+  and mipmaping. The mipmaping was used specifically on 
+  triangles where textures were being applied to them.
+  These textures involved implementing conversions to and
+  from barycentric coordinates, which we were also able to
+  use to blend colors together in a triangle. This is the
+  basic foundations of computer graphics which will allow
+  us to explore more complicated topics later in the course.
+</p>
+
+<h2 align="middle">Section I: Rasterization</h2>
+
+<h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td align = "middle">Figure 1.a</td>
+      <td align = "middle">Figure 1.b</td>
+    </tr>
+    <tr>
+      <td>
+        <img src="images/task1/dragon 2.png" align="middle" width="400px"/>
+      </td>
+      <td>
+        <img src="images/task1/test4-order-pixels.png" align="middle" width="400px"/>
+      </td>
+    </tr>
+    <tr>
+      <td align = "middle">Figure 1.c</td>
+      <td align = "middle">Figure 1.d</td>
+    </tr>
+    <tr>
+      <td>
+        <img src="images/task1/dragon 3.png" align="middle" width="400px"/>
+      </td>
+      <td>
+        <img src="images/task1/test4-final.png" align="middle" width="400px"/>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>
+  Our initial approach was to check every pixel on the
+  screen when drawing a triangle. To check if any pixel
+  is in a triangle with points 
+  (x<sub>0</sub>,y<sub>0</sub>),
+  (x<sub>1</sub>,y<sub>1</sub>),
+  and (x<sub>2</sub>,y<sub>2</sub>). We built a matrix
+  of lines perpendicular to the lines of the triangle
+    
+</p>
+
+\[\large{
+\begin{bmatrix}
+y_0 - y_1 & x_1 - x_0 & 0 \\\\
+y_1 - y_2 & x_2 - x_1 & 0 \\\\
+y_2 - y_0 & x_0 - x_2 & 0
+\end{bmatrix}
+}\]
+
+<p>
+The third row was only there because CGL only
+had 2x2 or 3x3 matricies. Then to see if any given point
+was in the triangle we just had to dot product its position
+with this matrix (of course becuase the matrix was 3x3 we had
+to add an extra point to the position of the pixel. We just
+made this 0). If all the values in the resulting vector
+were positive, then the point was in the triangle. With this
+matrix built we tested ran this on every single point in the
+buffer for each triangle. This unfortunately didn't work.
+No triangles were drawn in any picture. After looking over
+the lecture slides again we deteremined that the there was
+an error in the matrix that we constructed. It didn't take
+into account the fact that these parallel lines were centered
+on verticies of the triangle but the pixel coords were centered
+on the corner of the buffer. To remedy this we changed the matrix
+to look like this
+</p>
+
+\[\large{
+  \begin{bmatrix}
+  y_0 - y_1 & x_1 - x_0 & -(x_0y_1 + y_0x_1) \\\\
+  y_1 - y_2 & x_2 - x_1 & -(x_1y_2 + y_1x_2) \\\\
+  y_2 - y_0 & x_0 - x_2 & -(x_2y_0 + y_2x_0)
+  \end{bmatrix}
+  }\]
+
+<p>
+  We also had to change the third point in the pixel coord
+  to be 1 rather than 0. We this completed, we ran it again
+  and achieved what you see in Fig 1.a and Fig 1.b. Only
+  some of the triangles were being drawn. We realized it was
+  because we never considered what order the points were in.
+  If the three points of the triangle were passed in
+  counter-clockwise order then the function worked as intended.
+  If it was clockwise then it didn't work.
+</p>
+<p>
+  Our first approach to fix this was to create a helper function
+  to reorder the points in the triangle to be counter-clockwise
+  before rasterizing them. We could not quite get this to work,
+  and our images still looked somewhat like Fig 1.a and 1.b.
+  After this we realized that we could rasterize all triangles
+  more simply by considering points where the dot product with
+  our matrix contained all negative values or all positive
+  values. This was because clockwise triangles would produce
+  a dot product of all negative points if a point was inside
+  of the triangle. If a point was outside the triangle, the dot
+  product would be some combination of positive and negative
+  values regardless of if the points were clockwise or counter.
+  Doing this allowed use to make Fig 1.c and Fig 1.d.
+</p>
+<p>
+  Now this was working but it was running very slow. This
+  was because we were still checking every pixel on the
+  screen for every triangle we were trying to watch. We
+  changed this to only check the bounding box of the
+  triangle. Finding the bounding box was as simple as 
+  taking the floor of the lowest x and y coords of the
+  triangle and the ceiling of the highest x and y coords.
+  Once this was done, it ran much faster and still was able
+  to fill in all the triangles as intended.
+</p>
+<p>
+  One final thing to note about what this rasterization can
+  accomplish is that it produces a lot of jaggies. You can
+  see in the zoom in box at the top right of Fig 1.d how
+  bad the jaggies are on the thin red triangle in the center.
+  We will resolve these issues in the next section.
+</p>
+
+
+<h3 align="middle">Part 2: Antialiasing triangles</h3>
+<p>
+  Supersampling is when you sample each frame buffer pixel more than once 
+  in order to take the average of all the sample's colors to determine 
+  the frame buffer pixel's color. Supersampling is used to antialias 
+  the triangles, and is useful for getting rid of jaggies and other artifacts.
+  <br>
+  In our supersampling algorithm, we performed the in-triangle tests with <code>sampling_rate</code> 
+  amount of sample points in the frame buffer pixel. To do this, we used coordinates equal to the pixel's 
+  coordinates plus <code>1/sqrt(sampling_rate)</code>. In doing that, we were able to sample 
+  the sample rate amount of pixels from the sample buffer per each frame buffer pixel.
+  <br>
+  <table class="centered">
+    <tr><td>
+    <img src="images/task2/Flowers.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 2.a</figcaption>
+    </td></tr>
+  </table>
+  <br>
+  Figure 2.a shows the result of successful supersampling, but with an unsuccessful incrementation 
+  through the frame and sample buffer. We were successfuling sampling with the correct 
+  sample rate, but we were not moving the bounding box correctly. We fixed this by 
+  factoring in the sample rate into the bounding box.
+  <br>
+  <table class="centered">
+    <tr><td>
+    <img src="images/task2/1spp.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 2.b</figcaption>
+    </td></tr>
+  </table>
+  <table class="centered">
+    <tr><td>
+    <img src="images/task2/4spp.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 2.c</figcaption>
+    </td></tr>
+  </table>
+  <table class="centered">
+    <tr><td>
+    <img src="images/task2/9spp.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 2.d</figcaption>
+    </td></tr>
+  </table>
+  <table class="centered">
+    <tr><td>
+    <img src="images/task2/16spp.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 2.e</figcaption>
+    </td></tr>
+  </table>
+  Figures 2.b through 2.e show the same image, but with a sample rate 
+  of 1, 4, 9, and 16 respectively. In Figure 2.b, we can see there are 
+  floating pixels that are not connected to the pink triangle, which 
+  happens because the sampling rate is low, and thus misses certain 
+  areas of the triangle that do not stricly include the center of 
+  a pixel. As the sample rate increases, the more connected those floating 
+  pixels are to the rest of the triangle. Thus, Figure 2.e appears the 
+  best because the higher sampling rate is able to consider more areas 
+  within a frame buffer.
+</p>
+
+
+<h3 align="middle">Part 3: Transforms</h3>
+<!-- 
+  TODO:
+  Create an updated version of svg/transforms/robot.svg with cubeman 
+  doing something more interesting, like waving or running. Feel free 
+  to change his colors or proportions to suit your creativity. Save 
+  your svg file as my_robot.svg in your docs/ directory and show a png 
+  screenshot of your rendered drawing in your write-up. Explain what 
+  you were trying to do with cubeman in words.
+-->
+<p align="middle">
+  Introducing Jortson! He is a cubeman who loves jorts and to run. We 
+  gave him some jorts and a tank top by adding polygons with assigned 
+  colors that correspond to the item of clothing in the SVG file. We 
+  also put Jortson in a running position by chaging the translation 
+  and rotation transformations.
+  <br>
+  <img src="images/task3/Jortson.gif" id="jortson" onclick="toggle()" align="middle" width="400px"/>
+  <figcaption align="middle">Figure 3.a: Jortson</figcaption>
+  <br>
+  We were able to make a GIF of Jortson spinning by taking multiple 
+  screenshots of Jortson where in each frame he is rotated to the 
+  right. We rotated Jortson by using the 'E' hotkey we implemented 
+  as part of the two extra features we added to the GUI, as detailed 
+  below under "Extra Credit".
+  <br><br>
+  <strong>Extra Credit:</strong> 
+  We added 'Q' and 'E' as hotkeys which rotate the viewport to the 
+  left and right respectively. To do this, we added a case for both 
+  keys in the <code>DrawRend::keyboard_event</code> method. For both 
+  cases, we iterated through the SVG's elements and updated the 
+  elements' tranform attribute to be the current transform matrix 
+  times the rotational matrix given from <code>rotate</code>. For 'Q', 
+  we rotated 15 degrees (counter-clockwise), and for 'E', we rotated 
+  -15 degrees (clockwise).
+  
+
+  <!-- more cases: 'Q' and 'E'. The hotkey 'Q' rotates the image in 
+  which iterates 
+  through an SVG's elements and transforms each of them by matrix 
+  multiplying them by the roational matrix from calling 
+  <code>rotate(-15)</code>. -->
+
+</p>
+
+
+<h2 align="middle">Section II: Sampling</h2>
+
+<h3 align="middle">Part 4: Barycentric coordinates</h3>
+
+In lecture we were given equations for calculating
+barycentric coordinates. We decided to convert these
+equations into a matrix so that all we had to do was to dot
+the homogeneous coordinate of a pixel with the conversion
+matrix to get the barycentric coordinates.
+
+\[\Large{
+  \begin{bmatrix}
+  \frac{y_1 - y_2}{P_\alpha} & \frac{x_2 - x_1}{P_\alpha} & \frac{x_1y_2 - y_1x_2}{P_\alpha} \\
+  \frac{y_2 - y_0}{P_\beta} & \frac{x_0 - x_2}{P_\beta} & \frac{x_2y_0 - y_2x_0}{P_\beta} \\
+  \frac{(y_2 - y_1)P_\beta \ + \ (y_0-y_2)P_\alpha}{P_\alpha P_\beta} &
+  \frac{(x_1 - x_2)P_\beta \ + \ (y_2-y_0)P_\alpha}{P_\alpha P_\beta} &
+  \frac{P_\alpha P_\beta \ - \ (x_1y_2 - y_1x_2)P_\beta \ + \ (x_2y_0-x_0y_2)P_\alpha}{P_\alpha P_\beta}
+  \end{bmatrix}
+}
+\]
+
+<p>The two \(P\) terms are just short hand for the following
+   two expressions</p>
+
+\[ P_\alpha = (y_0-y_1)(x_2-x_1) - (x_0 - x_1)(y_2 - y_1) \]
+\[ P_\beta = (y_1-y_2)(x_0-x_2) - (x_1 - x_2)(y_0 - y_2) \]
+
+<p>With this expression in hand we were now able to 
+   interpolate the colors. For each pixel we took the
+   dot product of its homogeneous coordinate with this
+   matrix. This gave us its barycentric coordinate.
+   We then multiplied each of these barycentric coordinates
+   with the color corresponding with that corner. Because 
+   barycentric coordinates all add to one, doing this is like
+   taking a weighted average. This allowed us to create Fig 4.
+</p>
+
+<table class="centered">
+  <tr><td>
+  <img src="images/task4/colors.png" align="middle" width="400px"/>
+  <figcaption align="middle">Figure 4</figcaption>
+  </td></tr>
+</table>
+
+<h3 align="middle">Part 5: "Pixel sampling" for texture mapping</h3>
+<p>
+  Pixel sampling is when the sample buffer is sampled in order to 
+  determine the color of the coorespoding pixel in the frame buffer. 
+  We implemented two different methods of pixel sampling: nearest and 
+  bilinear interpolation. Nearest pixel sampling is when only the 
+  nearest pixel in the sample buffer is used to determine the color of 
+  the pixel in the frame buffer. Bilinear interpolation pixel sampling 
+  is when the color for the frame buffer pixel is determined by taking 
+  the bilinear interpolation of the colors of the four nearest pixels 
+  in the sample buffer.
+  <br>
+  <!-- To sample pixels, we kept our bounding box for the frame buffer from 
+  procedure 1 in order to significantly reduce the amount of pixels 
+  sampled. When we get to a pixel that is inside the triangle, which 
+  is calculated with the same line equations from procedure 1, we 
+  convert the point to barycentric coordinates...  -->
+  In implementing both pixel sampling methods, we converted 
+  <code>(u,v)</code> to texel space by multiplying <code>u</code> by 
+  the <code>MipLevel.width</code> and multiplying <code>v</code> by 
+  the <code>MipLevel.height</code>.
+  <br>
+  To implement nearest pixel sampling, we convert <code>(u,v)</code> 
+  to texel space and simply <code>floor</code> the <code>(u,v)</code> 
+  to get the corresponding nearest texel in the <code>mipmap</code>. 
+  The pixel to be rasterized get the color of this one nearest texel.
+  <br>
+  To implement bilinear pixel interpolation sampling, we convert 
+  <code>(u,v)</code> to texel space and <code>round</code> the 
+  <code>(u,v)</code> to get the nearest texel. Then, we get the 
+  3 nearest texels to this rounded <code>(u,v)</code> texel, clamping 
+  them to the <code>mipmap</code>'s <code>width</code> and 
+  <code>height</code> in order to account for edge cases. Then, we 
+  compute our <code>s</code> and <code>t</code> values for bilinear 
+  interpolation, which are the x- and y- distances from the original 
+  <code>(u,v)</code> point to the <code>(u,v)</code> texel points. 
+  Finally, we do 3 lerps between the 4 nearest texels' colors to 
+  determine the color of the pixel to be rasterized's color.
+  <br>
+  <table class="centered">
+    <tr><td>
+    <img src="images/task5/nearest.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 5.a</figcaption>
+    </td></tr>
+  </table>
+  <table class="centered">
+    <tr><td>
+    <img src="images/task5/nearest.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 5.b</figcaption>
+    </td></tr>
+  </table>
+  <br>
+  Figures 5.a and 5.b show the Campanile with two different pixel 
+  sampling methods. Figure 5.a is using the nearest pixel sampling 
+  method, and Figure 5.b is using the bilinear pixel interpolation 
+  sampling method. Clearly, bilinear pixel interpolation is the 
+  better sampling method here because it is more smoothed out.
+  <table class="centered">
+    <tr><td>
+    <img src="images/task5/logo-n1.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 5.c: Nearest at 1 sample per pixel</figcaption>
+    </td></tr>
+  </table>
+  <table class="centered">
+    <tr><td>
+    <img src="images/task5/logo-n16.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 5.d: Nearest at 16 samples per pixel</figcaption>
+    </td></tr>
+  </table>
+  <table class="centered">
+    <tr><td>
+    <img src="images/task5/logo-b1.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 5.e: Bilinear at 1 sample per pixel</figcaption>
+    </td></tr>
+  </table>
+  <table class="centered">
+    <tr><td>
+    <img src="images/task5/logo-b16.png" align="middle" width="400px"/>
+    <figcaption align="middle">Figure 5.f: Bilinear at 16 samples per pixel</figcaption>
+    </td></tr>
+  </table>
+  Figures 5.c through 5.f show the twisted UC Berkeley logo with different 
+  pixel sampling methods and sample rates. Between the first two, which 
+  are using nearest pixel sampling, 16 samples per pixel shows a smoother 
+  image than 1 sample per pixel. Between the second two, which are using 
+  bilinear pixel interpolation sampling, 16 samples per pixel also shows 
+  a smoother image than 1 sample per pixel. Comparing the two pairs, it is 
+  clear that bilinear pixel interpolation sampling is better because you can 
+  see that the colors are more blended, thus producing a smoother image. 
+  It is very clear that bilinear is better because this particular image 
+  changes from one color to the next rapidly. Thus, when the sharp color 
+  change is not blended out, it appears obviously pixelated. Had there not 
+  been such sharp color changes throughout the image, the difference 
+  between the two pixel sampling methods would not have been so noticeable.
+</p>
+
+
+<h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
+<p>
+  Level sampling is used for antialiasing for a simalar
+  reason that supersampling is used. Each mipmap level
+  has higher and higher frequencies taken out by averaging
+  together more of the pixels. In order to determine which
+  mipmap level to use, you need to calculate how the uv
+  changes with changes in pixel location in the buffer.
+  The faster uv is changing the higher the level of the
+  mipmap should be used. This is because each pixel drawn
+  will cover a larger area in the tecture and therefore
+  does not need as much detail. The equation to calculate
+  is from lecture and is as follows:
+</p>
+
+\[D = \log_2 L\]
+\[L = max\left(\sqrt{\left(\frac{du}{dx}\right)^2 + \left(\frac{dv}{dx}\right)^2},\sqrt{\left(\frac{du}{dy}\right)^2 + \left(\frac{dv}{dy}\right)^2}\right) \]
+
+<p>
+  With this level calculated there is still three options
+  to be implemented. L_ZERO just uses the zeroth mipmap
+  level no matter what. L_NEAREST uses the mipmap level
+  closest to the one calculated with the equation above.
+  L_LINEAR uses a linear combination of the two closest
+  levels. We calculated the pixel color using both the
+  floor and cieling of the level calculated and then used
+  the difference between the level and its floor as the
+  value to lerp the two colors together.
+</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/task6/L_0 P_N.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 6.a: L_ZERO, P_NEAREST</figcaption>
+      </td>
+      <td>
+        <img src="images/task6/L_0 P_L.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 6.b: L_ZERO, P_LINEAR</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/task6/L_N P_N.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 6.c: L_NEAREST, P_NEAREST</figcaption>
+      </td>
+      <td>
+        <img src="images/task6/L_N P_L.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 6.d: L_NEAREST, P_LINEAR</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>
+  We had one main issue when implementing this where if
+  we zoomed into an image a lot of the triangles would
+  rasterize as magenta (Figure 6.e). The issue was because if
+  the texture was too zoomed in, the change in uv with
+  respect to the change in xy would be very small which
+  would cause the level to be calculated as a negative number.
+  We fixed this by forcing the level to be at least 0.
+</p>
+
+<table class="centered">
+  <tr><td>
+  <img src="images/task6/Magenta Seal.png" align="middle" width="400px"/>
+  <figcaption align="middle">Figure 6.e</figcaption>
+  </td></tr>
+</table>
+
+<h2 align="middle">Section III: Art Competition</h2>
+<p>If you are not participating in the optional art competition, don't worry about this section!</p>
+
+<h3 align="middle">Part 7: Draw something interesting!</h3>
+<p>
+  Re-introducing Jortson! A new and improved cubeman who now 
+  has textured clothing, a face, and is running on a scenic 
+  trail with his buddy Aidan.
+</p>
+  <table class="centered">
+    <tr><td>
+    <img src="images/a-wild-jortson.png" align="middle" width="800px"/>
+    <figcaption align="middle">Figure 7.a: A Wild Jortson</figcaption>
+    </td></tr>
+  </table>
+  <p>
+    We re-used the svg file for our cubeman from procedure 3 
+    and used CS184's TexTri class to add textures.  We downloaded 
+    a denim jpeg image, a t-shirt jpeg image, a cartoon face jpeg 
+    image, and a scenic trail jpeg image and then resaved them all 
+    as square png images. Then, we were able to replace the Polygons 
+    describing Jortson with TexTris that applied the previously 
+    mentioned images as textures.
+    <br>
+    Originally, we did not save the texture images as squares, so 
+    when we applied the textures to Jortson's SVG, there were many 
+    artifacts that showed the texture too stretched out and zoomed 
+    in. So, we decided to save the texture images as sqaures so that 
+    coordinating the <code>uvs</code> to the <code>points</code> 
+    was simpler. After that, we then were getting a Moiré Pattern in 
+    the clothing. We played around with the supersampling rate and 
+    texture filtering methods on pixels and mipmap levels. We found 
+    that the changing the supersample rate made the texture appear a 
+    lot better, especially with a sample rate of 16. We also found 
+    that using bilinear level and pixel interpolation made the texture 
+    also appear a lot better while also loading faster than increasing 
+    the sample rate. Additionally, using bilinear level and pixel 
+    interpolation made the scenic trail background appear a lot better, 
+    too.
+  </p>
+
+</body>
 </html>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 16.0.4, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="500.0px" height="500.0px" viewBox="0 0 500 500" enable-background="new 0 0 500 500"
+	 xml:space="preserve">
+	
+<texture filename="../../img/denim.png" texid="denim"></texture>
+<texture filename="../../img/t-shirt.png" texid="shirt"></texture>
+<texture filename="../../img/jortson-face.png" texid="face"></texture>
+<texture filename="../../img/mountain-trail-2.png" texid="mnt-trail"></texture>
+<texture filename="../../img/scenic-trail-3.png" texid="snc-trail"></texture>
+
+<g transform="translate(250 250)">
+	<!-- background -->
+	<textri texid="snc-trail" uvs ="0 0 1 0 0 1" points="-500 -500 500 -500 -500 500 "/>
+	<textri texid="snc-trail" uvs ="0 1 1 0 1 1" points="-500 500 500 -500 500 500"/>
+	<!-- <polygon fill="#ADD8E6" points="-500,-500 500,-500 -500,500 "/>
+	<polygon fill="#ADD8E6" points="-500,500 500,-500 500,500"/> -->
+
+	<g transform="scale(1 1.25)">
+		<!-- torso -->
+		<textri texid="shirt" uvs="0 0 1 0 0 1" points="-50 -50 50 -50 -50 50 "/>
+		<textri texid="shirt" uvs="0 1 1 0 1 1" points="-50 50 50 -50 50 50"/>
+		<!--<polygon fill="#AFAFAF" points="-50,-50 50,-50 -50,50 "/>
+		<polygon fill="#AFAFAF" points="-50,50 50,-50 50,50"/>-->
+		<!--left shoulder-->
+		<polygon fill="#ef3838" points="-50,-50 -50, -25 -25,-50"/>
+		<polygon fill="#ef3838" points="-25,-25 -50, -25 -25,-50"/>
+		<!--right shoulder-->
+		<polygon fill="#ef3838" points="50,-50 25,-50 25,-25"/>
+		<polygon fill="#ef3838" points="50,-25 50,-50 25,-25"/>
+		
+		<!--jorts-->
+		<textri texid="denim" uvs ="0 0 0 .2 .8 0" points="-50 25 -50 50 50 25 "/>
+		<textri texid="denim" uvs =".8 .2 0 .2 .8 0" points="50 50 -50 50 50 25"/>
+		<!--<polygon fill="#023A9E" points="-50,25 -50,50 50,25"/>
+		<polygon fill="#023A9E" points="50,50 -50,50 50,25"/>-->
+	</g>
+	
+
+	<!-- head -->
+	<g transform="translate(0 -110)">
+		<g transform="rotate(0)">
+			<g transform="scale(0.75 0.75)">
+				<!--face-->
+				<textri texid="face" uvs="0.1 0.1 .9 0.1 .9 .9" points="-37.5 -37.5 37.5 -37.5 37.5 37.5 "/>
+				<textri texid="face" uvs="0.1 0.1 0.1 .9 .9 .9" points="-37.5 -37.5 -37.5 37.5 37.5 37.5"/>
+				<!--<polygon fill="#ef3838" points="-37.5,-37.5 37.5,-37.5 37.5,37.5 "/>
+				<polygon fill="#ef3838" points="-37.5,-37.5 -37.5,37.5 37.5,37.5"/>-->
+				<!--top of head-->
+				<polygon fill="#ef3838" points="-37.5,-37.5 -25,-50 37.5,-37.5 "/>
+				<polygon fill="#ef3838" points="25,-50 -25,-50 37.5,-37.5"/>
+				<!--left of head-->
+				<g transform="rotate(90)">
+					<polygon fill="#ef3838" points="-37.5,-37.5 -25,-50 37.5,-37.5 "/>
+					<polygon fill="#ef3838" points="25,-50 -25,-50 37.5,-37.5"/>
+				</g>
+				<!--right of head-->
+				<g transform="rotate(-90)">
+					<polygon fill="#ef3838" points="-37.5,-37.5 -25,-50 37.5,-37.5 "/>
+					<polygon fill="#ef3838" points="25,-50 -25,-50 37.5,-37.5"/>
+				</g>
+				<!--right of head-->
+				<g transform="rotate(180)">
+					<polygon fill="#ef3838" points="-37.5,-37.5 -25,-50 37.5,-37.5 "/>
+					<polygon fill="#ef3838" points="25,-50 -25,-50 37.5,-37.5"/>
+				</g>
+				<!--chin-->
+				<!--<polygon fill="#ef3838" points="-25,50 25,50 0,75 "/>-->
+			</g>
+		</g>
+	</g>
+
+	<g transform="scale(1 1.25)">
+		<!-- left leg -->
+		<g transform="translate(-60 90)*rotate(-35)">
+			<g transform="translate(-20 45)*rotate(-40)">
+				<g transform="scale(.2 .6)">
+					<polygon fill="#ef3838" points="-50,-50 50,-50 -50,50 "/>
+					<polygon fill="#ef3838" points="-50,50 50,-50 50,50"/>
+				</g>
+			</g>
+			<g transform="scale(.2 .6)">
+				<textri texid="denim" uvs ="0 0 0.15 0 0 0.45" points="-50 -50 50 -50 -50 50 "/>
+				<textri texid="denim" uvs ="0 0.45 0.15 0 0.15 0.45" points="-50 50 50 -50 50 50"/>
+				<!--<polygon fill="#023A9E" points="-50,-50 50,-50 -50,50 "/>
+				<polygon fill="#023A9E" points="-50,50 50,-50 50,50"/>-->
+			</g>
+		</g>
+
+		<!-- right leg -->
+		<g transform="translate(80 80)*rotate(45)">
+			<g transform="translate(-22 35)*rotate(-60)">
+				<g transform="scale(.2 .6)">
+					<polygon fill="#ef3838" points="-50,-50 50,-50 -50,50 "/>
+					<polygon fill="#ef3838" points="-50,50 50,-50 50,50"/>
+				</g>
+			</g>
+			<g transform="scale(.2 .6)">
+				<textri texid="denim" uvs ="0 0 0.15 0 0 0.45" points="-50 -50 50 -50 -50 50 "/>
+				<textri texid="denim" uvs ="0 0.45 0.15 0 0.15 0.45" points="-50 50 50 -50 50 50"/>
+				<!--<polygon fill="#023A9E" points="-50,-50 50,-50 -50,50 "/>
+				<polygon fill="#023A9E" points="-50,50 50,-50 50,50"/>-->
+				</g>
+		</g>
+	</g>
+
+	<!--left arm-->
+	<g transform="translate(-90 -25)*rotate(45)">
+		<g transform="scale(.6 .2)">
+			<polygon fill="#ef3838" points="-50,-50 50,-50 -50,50 "/>
+			<polygon fill="#ef3838" points="-50,50 50,-50 50,50"/>
+		</g>
+		<g transform="translate(-30 20)*rotate(90)">
+			<g transform="scale(.6 .2)">
+				<polygon fill="#ef3838" points="-50,-50 50,-50 -50,50 "/>
+				<polygon fill="#ef3838" points="-50,50 50,-50 50,50"/>
+			</g>
+		</g>
+	</g>
+
+	<!--right arm-->
+	<g transform="translate(90 -20)*rotate(-45)">
+		<g transform="scale(.6 .2)">
+			<polygon fill="#ef3838" points="-50,-50 50,-50 -50,50 "/>
+			<polygon fill="#ef3838" points="-50,50 50,-50 50,50"/>
+		</g>
+		<g transform="translate(40 -20)*rotate(90)">
+			<g transform="scale(.6 .2)">
+				<polygon fill="#ef3838" points="-50,-50 50,-50 -50,50 "/>
+				<polygon fill="#ef3838" points="-50,50 50,-50 50,50"/>
+			</g>
+		</g>
+	</g>
+
+</g>
+
+
+</svg>
