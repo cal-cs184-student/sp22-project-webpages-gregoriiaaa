@@ -1,7 +1,431 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 2 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+  <style>
+    body {
+      padding: 100px;
+      width: 1000px;
+      margin: auto;
+      text-align: left;
+      font-weight: 300;
+      font-family: 'Open Sans', sans-serif;
+      color: #121212;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      font-family: 'Source Sans Pro', sans-serif;
+    }
+  </style>
+
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+  <title>CS 184 Mesh Editor</title>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+  <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2022</h1>
+  <h1 align="middle">Project 2: Mesh Editor</h1>
+  <h2 align="middle">Gregoria Millensifer, Tristan Streichenberger, CS184-SP22</h2>
+
+  <br><br>
+
+  <div>
+
+    <h2 align="middle">Overview</h2>
+    
+    <p>
+      This project taught us a lot about drawing 3D objects
+      through meshes. The mesh was composed of many different
+      components such as verteces, edges, and faces. The most
+      important component is the half edge, which has pointers
+      to a lot of its neighboring components. Following these
+      pointers allows us to traverse the mesh. We implemented
+      the flip and split operations that can be performed on
+      edges. These implementations allowed us to implement
+      loop subdivision, which allows us to upsample the mesh
+      to get a smoother mesh.
+    </p>
+
+    <h2 align="middle">Section I: Bezier Curves and Surfaces</h2>
+
+    <h3 align="middle">Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
+
+    <p>
+      De Casteljau's Algorithm is a way of evaluating a Bezier 
+      Curve with arbitrary number of control points. Implementing
+      it is as simple as using lerping between each of the n
+      control points to get n-1 new cotrol points. Then
+      recursively doing this until there is only one control
+      point left. This will be the value on the bezier curve
+      with the given t value. To be clear, each control
+      point is only lerped with its adjacent control points
+      in the input vector, and the amount to lerp 
+      by is the value t.
+    </p>
+
+    <p>
+      We created a <code>.bzc</code> file where we plotted
+      the first 6 points of the fibonocci spiral (shown in figures below).
+      This did not actually draw a golden spiral however
+      because this spiral requires the curve to pass
+      through all the points which the bezier curves do not do.
+    </p>
+    
+
+    <div align="middle">
+      <table style="width=100%">
+        <tr>
+          <td>
+            <img src="Images/task1/1.png" align="middle" width="400px" />
+            <figcaption align="middle">Original Control Points</figcaption>
+          </td>
+          <td>
+            <img src="Images/task1/2.png" align="middle" width="400px" />
+            <figcaption align="middle">Level 1</figcaption>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <img src="Images/task1/3.png" align="middle" width="400px" />
+            <figcaption align="middle">Level 2</figcaption>
+          </td>
+          <td>
+            <img src="Images/task1/4.png" align="middle" width="400px" />
+            <figcaption align="middle">Level 3</figcaption>
+          </td>
+        </tr>
+        <br>
+        <tr>
+          <td>
+            <img src="Images/task1/5.png" align="middle" width="400px" />
+            <figcaption align="middle">Level 4</figcaption>
+          </td>
+          <td>
+            <img src="Images/task1/6.png" align="middle" width="400px" />
+            <figcaption align="middle">Level 5</figcaption>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <img src="Images/task1/final.png" align="middle" width="400px" />
+            <figcaption align="middle">Final Bexier Curve</figcaption>
+          </td>
+          <td>
+            <img src="Images/task1/different.png" align="middle" width="400px" />
+            <figcaption align="middle">Slightly Different Bezier Curve</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+
+    <h3 align="middle">Part 2: Bezier surfaces with separable 1D de Casteljau subdivision</h3>
+
+    <p>
+      De Casteljau's algorithm can be expanded to surfaces
+      in the following way. Since we're given a vector of vectors
+      of 3D points, we first run the standard de Casteljau's
+      algorithm on each of the vector's, using u as the float t.
+      We save all the points that this ouputs into a new vector.
+      Once this is done we run the standard de Casteljau's
+      algorithm on these points using v as our t value. This
+      gives us our final value.
+    </p>
+    <div align="middle">
+      <img src="Images/task2/teapot.png" width="600px" />
+    </div>
+
+
+    <h2 align="middle">Section II: Sampling</h2>
+
+    <h3 align="middle">Part 3: Average normals for half-edge meshes</h3>
+
+    <p>
+      In this section we wrote a function to calculate
+      a normal for a vertex. These vertex normals can be
+      used for Phong Shading, which is where the normals
+      of each of the vertexes are interpolated across the
+      triangle and used to calculate the color. To calculate
+      the normal of any given vertex we iterated over all of
+      the adjacent faces using the half edges. For each of
+      the faces we calculated its normal and its area. We 
+      then averaged together all of these normals using the 
+      area of the triangle. With this done the shading became
+      much less blocky, as can be seen in the images below.
+    </p>
+
+    <div align="middle">
+      <table>
+        <tr>
+          <td>
+            <img src="Images/task3/no-vertex-norms.png" width="500px" />
+          </td>
+          <td>
+            <img src="Images/task3/yes-vertex-norms.png" width="500px" />
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <p>
+      For a while we were dealing with a bug where when we
+      tried to turn on the shading the whole object would
+      just turn dark. Through the debugger we found that the 
+      area of each of the adjacent faces were being calculated
+      to be zero. We discovered it was because we were
+      accidentally assigning two different pointers to the same
+      vertex for each triangle. This means we were trying to
+      calculate the area of a line, which is why we were always
+      getting zero. Once we fixed this, it worked as intended.
+    </p>
+
+    <h3 align="middle">Part 4: Half-edge flip</h3>
+    <p>
+      To implement the edge flipping operation, we first check if edge 
+      <code>e0</code> is a boundary, which we ignore if it is. Then, we 
+      grab all the pointers that describe the triangles <code>(a,b,c)</code> 
+      and <code>(c,b,d)</code>. To do that, we go through 
+      <code>e0</code>'s half-edge, then go to that half-edge's next, and 
+      so on until we've collected all the pointers to the half-edges and 
+      faces that we want. We then assure that the face <code>(c,b,d)</code> 
+      is pointing to the half-edge <code>bc</code> and <code>(a,b,c)</code> 
+      is pointing to the half-edge <code>cb</code> so that when we later 
+      reassign the faces, we are confident on which face pointer we have. 
+      Then, we change the edge <code>CB</code> into the edge <code>AD</code> 
+      by modifying the half-edges' source vertecies from <code>c</code> 
+      to <code>d</code> and <code>b</code> to <code>a</code>. We also 
+      assure that the vertices <code>c</code> and <code>b</code> are not 
+      pointing to the half-edges <code>cb</code> and <code>bc</code> by 
+      reassigning those vertices' half-edges to be <code>ca</code> and 
+      <code>bd</code>, respectively. Finally, we go through all the 
+      half-edges and reassign their attributes using the 
+      <code>Halfedge::setNeighbors</code> method, effectivly modifying 
+      the <code>next</code> and <code>face</code> attributes and changing 
+      the <code>(a,b,c)</code> and <code>(c,b,d)</code> triangles into 
+      the <code>(a,d,c)</code> and <code>(a,b,d)</code> triangles.
+
+      <div align="middle">
+        <table>
+          <tr>
+            <td>
+              <img src="Images/task4/before-edge-flips.png" width="300px" />
+              <figcaption align="middle">Teapot before any edge flips</figcaption>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div align="middle">
+        <table>
+          <tr>
+            <td>
+              <img src="Images/task4/after-wm.png" width="300px" />
+              <figcaption align="middle">Teapot after some edge flips</figcaption>
+            </td>
+            <td>
+              <img src="Images/task4/after.png" width="300px" />
+              <figcaption align="middle">Teapot after some edge flips</figcaption>
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+    </p>
+
+
+    <h3 align="middle">Part 5: Half-edge split</h3>
+
+    <p>
+      We approached the half edge split in the same way
+      as we approached the half edge flip. We drew the
+      triangles before and after and gave each component
+      a name. Then when we wrote the code, we first got the 
+      pointer to each of the existing component and named
+      them in the same way as in our drawing. Then we created
+      the new components. We needed to create 2 faces, 3 edges,
+      6 half edges, and one vertex. All of the new components
+      needed all of their pointers assigned. The faces, edges,
+      and vertex all needed a half edge to point to. The half
+      edges needed many other pointers assigned. After we did
+      this we just needed to changed the next pointers of all
+      the existing half edges. In the figures below you can
+      see the difference between the original mesh and one
+      in which we split and flipped edges.
+    </p>
+
+    <div align="middle">
+    <table>
+      <tr>
+        <td>
+          <img src="Images/task5/PreSplit.png" width="500px" />
+          <figcaption align="middle">Original Teapot Handle</figcaption>
+        </td>
+        <td>
+          <img src="Images/task5/Split.png" width="500px" />
+          <figcaption align="middle">Teapot Handle after splits and flips</figcaption>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+
+    <h3 align="middle">Part 6: Loop subdivision for mesh upsampling</h3>
+    <p>
+      Our implementation of loop subdivision followed the suggested flow 
+      as commented in the skeleton code. We first calculated the position 
+      of all the old vertices according to their weighted average of 
+      neighboring vertex positions as well as set each old vertex's 
+      <code>isNew</code> attribute to <code>false</code>. Then, we 
+      calculated the position of new vertices according to the logic 
+      presented in the spec and set all the old edge's <code>isNew</code> 
+      attribute to <code>false</code>. Then, we iterate through the 
+      list of edges and split them. At first, we were iterating through 
+      the edges list with a stopping condition of reaching the end of 
+      the list, which we later learned caused our code to go into an 
+      infinite loop because in every iteration we were adding new edges 
+      into the edges list. Therefore, we added a counter and updated our 
+      stopping condition to be when the counter equals the orginal length 
+      of the edges list. Then, we iterate through the the list of edges 
+      and flip all the edges whose <code>isNew</code> attribute is set 
+      to <code>true</code>. Here, we updated our <code>HalfedgeMesh::splitEdge</code> 
+      method to set the <code>isNew</code> attribute to <code>true</code> for 
+      the three edges created so that when we went through our flipping 
+      iteration, we could check if the edge was a new one. If the edge 
+      was new, then we also checked if the edge went from an old vertex 
+      to a new one by accessing the vertices through the edge's half-edges. 
+      Finally, we reassign all the vertices' position to the new positions 
+      we calculated earlier in one final iteration over the verices list.
+      <br><br>
+      At first, we were not assining the old edge's <code>isNew</code> 
+      attribute to <code>false</code> when iterating through them, which 
+      caused the bug shown below. All we had to do to fix this was to make 
+      sure we assigned the old edge's <code>isNew</code> attribute to 
+      <code>false</code>.
+    </p>
+    <div align="middle">
+      <table>
+        <tr>
+          <td>
+            <img src="Images/task6/upSample-Bug.png" width="500px" />
+            <figcaption align="middle">Bug</figcaption>
+          </td>
+          <td>
+            <img src="Images/task6/upSample.png" width="500px" />
+            <figcaption align="middle">Bug fixed</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <p>
+      After going through the different files and playing around with the 
+      upsampling, we found that sometimes the object would get a divot, as 
+      shown below. We noted that we could prevent the divot from happening 
+      by flipping one of its edges back and forth. Therefore, at the end of 
+      our loop division implemenation, we added a loop that would flip every 
+      edge in the mesh twice, which ended up fixing the bug.
+    </p>
+    <div align="middle">
+      <table>
+        <tr>
+          <td>
+            <img src="Images/task6/divot-bug.png" width="500px" />
+            <figcaption align="middle">Bug</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <p>
+      We also came across an error when trying to upsample the <code>beetle.dae</code> 
+      file. Using our IDE, we found that we were not checking if the edge to be 
+      split was a boundary in our <code>upsample</code> method. This caused an 
+      attempt to access a <code>null</code> pointer because the <code>HalfedgeMesh::splitEdge</code> 
+      method returned one if the edge was a boundary. We fixed this bug simply by 
+      adding a <code>isBoundary</code> check before attempting to split the edge, 
+      which we would skip if it was a boundary.
+      <br><br>
+      After loop subdivisions, the sharp corners and edges in the meshes
+      smooth over, creating a smoothed out object.
+    </p>
+    <div align="middle">
+      <table>
+        <tr>
+          <td>
+            <img src="Images/task6/up1-cow.png" width="300px" />
+            <figcaption align="middle">Upsampled once</figcaption>
+          </td>
+          <td>
+            <img src="Images/task6/smooth-cow.png" width="300px" />
+            <figcaption align="middle">Upsampled a few times</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <p>
+      Although by pre-splitting some edges does create a lasting effect on the 
+      mesh after upsampling, the mesh still appears to be smoothed out, as seen 
+      below on the cow's nose.
+    </p>
+    <div align="middle">
+      <table>
+        <tr>
+          <td>
+            <img src="Images/task6/preproc-cow.png" width="300px" />
+            <figcaption align="middle">Pre-splitting</figcaption>
+          </td>
+          <td>
+            <img src="Images/task6/not-smooth-cow.png" width="300px" />
+            <figcaption align="middle">Upsampled after pre-splitting</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <p>
+      Performing several iterations of loop subdivision on the cube made the cube 
+      a bit asymmetric. We found that by manually splitting every edge that was 
+      along a face of the cube before upsampling would effectivly preprocess the 
+      cube so that it would subdivide symmetrically. This preprocessing makes 
+      sense because it is esentially giving the cube's faces equal triangles before 
+      upsampling, whereas if we don't preprocess the cube like this, the cube starts 
+      off with uneven triangles on each face.
+    </p>
+    <div align="middle">
+      <table>
+        <tr>
+          <td>
+            <img src="Images/task6/preprocessed-cube.png" width="300px" />
+            <figcaption align="middle">Cube</figcaption>
+          </td>
+          <td>
+            <img src="Images/task6/Cube.png" width="300px" />
+            <figcaption align="middle">Preprocessed cube</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div align="middle">
+      <table>
+        <tr>
+          <td>
+            <img src="Images/task6/uneven-cube.png" width="300px" />
+            <figcaption align="middle">Cube upsampled</figcaption>
+          </td>
+          <td>
+            <img src="Images/task6/even-cube.png" width="300px" />
+            <figcaption align="middle">Preprocessed cube upsampled</figcaption>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+
+</body>
+
 </html>
