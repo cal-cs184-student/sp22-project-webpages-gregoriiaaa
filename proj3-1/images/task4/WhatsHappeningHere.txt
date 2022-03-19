@@ -1,0 +1,8 @@
+brightSpecks
+*m=3
+*First attempt at global illumination
+
+brightSpecks-->speckless
+*m=3
+*swapped wi and wo
+*took the zero bounce radiance out of the one bounce radiance function and moved it into the estimate global illumination function.

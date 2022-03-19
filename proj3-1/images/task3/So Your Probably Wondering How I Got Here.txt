@@ -1,0 +1,49 @@
+justLight-->I Am The Night
+*turned on oneBounce shading
+*sampled outgoing rays from intersection point. 
+
+I Am The Night --> darkWall
+*changed incoming ray from object space to world space before testing for intersections.
+
+darkWall-->shadedDarkWall
+*Added cos weighting to sample_f
+
+shadedDarkWall-->redWall
+*set min_T of incoming ray to EPS_F to that the ray would not intersect with its own origin
+
+normalsBunny
+*Even with normals the right wall does not appear.
+*Perhaps something wrong with triangle intersection
+*bvh accel never calls triangle::intersect when looking at the right wall. It never reaches the leaf node
+
+normalsBunny-->normalsBunnyWithWall
+*error was in bbox::intersect
+*needed to catch an intersection on the edge case that the bbox was a 2D plane and therefore maxt and mint would be the same
+*just changed a < to a <=
+
+normalsBunnyWithWall-->allWalls
+*turned oneBounce shading back on
+
+allWalls-->allWallsHD
+*just increased the number of rays
+*16-8 -->64-32
+
+allwallsHD-->uniformHD
+*changed to uniform hemsphere sampling rather than cosine weighted sampling
+
+
+correct & correctHD
+*needed to devide by PI before returning the reflectance in the f function.
+*My intuition would be to use 2PI but someone on ohyay said this link explains it sakibsaikia.github.io/graphics/2019/09/10/Deriving-Lambertian-BRDF-From-First-Principles.html
+*Also added zero bounce illum to the one bounce function. This made the light turn on.
+
+
+
+bunnyofSteel
+*First attempt at importance sampling
+
+bunnyofSteel-->bunnyofFur
+*Sample_L output wi in world space not in object space so just adjusted for that
+
+bunnyofFur-->SmoothBunny
+*fixed bug that would not increment the number of samples if the incoming light ray was beneath the surface of the mesh

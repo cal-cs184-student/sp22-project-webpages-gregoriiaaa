@@ -1,7 +1,437 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 3-1 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>  
+    div.padded {  
+      padding-top: 0px;  
+      padding-right: 100px;  
+      padding-bottom: 0.25in;  
+      padding-left: 100px;  
+    }  
+  </style> 
+
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<title>3uclid  |  CS 184</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+<br />
+<h1 align="middle">Assignment 3: PathTracer</h1>
+<h2 align="middle">Gregoria Millensifer, Tristan Streichenberger</h2>
+
+    <div class="padded">
+        <p>
+            In this project, we implemented a pathtracing algorithm in order 
+            to render realistic pictures. We first implemented ray generation 
+            and intersection which involved us computing the <code>x</code> and 
+            <code>y</code> position in screen space from the virtual camera 
+            sensor as well as Möller Trumbore Algorithm for handling triangle 
+            intersections. Then we implemented a Bounding Volume Hierarchy which 
+            allowed us to accelerate finding ray intersections with primitives 
+            in our scences. Then we implemented two different direct lighting 
+            techniques, hemisphere lighting and importance sampling, with importance 
+            sampling rendering better images. Next, we implemented global illumination 
+            which renders both direct and indirect lighting effects. Finally, 
+            we implemented adaptive sampling which allowed us to render scenes 
+            at a much faster rate.
+        </p>
+    
+    <h2 align="middle">Part 1: Ray Generation and Intersection</h2>
+        <p>
+            To generate a ray that is pointing to a specific
+            (x,y) coordinate in screen space we first need to
+            multiply the x and y coordinates with the width and
+            height of the virtual camera sensor. The width and 
+            height of the sensor is given by 
+            \(\tan(\frac{hFov}{2})\) and \(\tan(\frac{vFov}{2})\).
+            We then just set the z coordinate to -1 and we have the
+            direction of the Ray in camera space. We then need to
+            transform the ray into world space by multiplying it
+            by the c2w matrix.
+        </p>
+        <p>
+            Then for each pixel in the screen buffer we
+            send a few rays out and average their radiance
+            to get the radiance of the pixel.
+            In order to get the radiance for each pixel we
+            need to handle ray triangle intersections. We did
+            this by using Möller Trumbore Algorithm as described
+            in lecture. This gave us t and the three barycentric
+            coords of the intersection. If the barycentric coords
+            are all positive, we know that the ray intersected the
+            triangle. With this done we were able to render our
+            our first scene.
+        </p>
+        <div align="center">
+            <img src="images/task1/zoomed-out-box.png" width="480px" />
+        </div>
+        
+    <h2 align="middle">Part 2: Bounding Volume Hierarchy</h2>
+
+    <p>
+        In our BVH algorithm, when we construct a new BVH from a given 
+        vector of primites and a maximum leaf configurations, we simply 
+        construct a new node with the same amount of primitives if the 
+        number of primitives is less than or equal than the given maximum 
+        leaf configuration. If there are more primitives than that, then 
+        we split the list of primitives into and create a left and right 
+        node to hold the two halves of the list. To split, we first compute 
+        the mean centroid of all the primitives and then sort each of the 
+        primitives into the left list if their <code>x</code> coordinate 
+        is less than the mean centroid's <code>x</code> coordinate and into 
+        the right list if it is greater. We repeat this spliting for the 
+        <code>y</code> and <code>z</code> coordinates as well. Once we have 
+        the six lists, we then choose which split we want based on which of 
+        the 3 pairs (<code>x</code>-left/right, <code>y</code>-left/right, 
+        <code>z</code>-left/right) have the most even split based on the number 
+        of primitives on each side. In other words, we compute the difference 
+        in number of primitives between the left and right lists for each of 
+        the <code>x</code>, <code>y</code>, and <code>z</code> lists and choose 
+        the pair that has the smallest difference. Finally, we recursively 
+        construct a new <code>BVH</code> for the node's left and right node 
+        with the chosen split.
+    </p>
+    <p>
+        To implement <code>BVHAccel::intersect</code>, we first check if the 
+        current bounding box has an intersection and check that the <code>t0</code> 
+        and <code>t1</code> values are in the same interval as the <code>max_t</code>
+        and <code>min_t</code> so that we can return <code>false</code> immediately 
+        if there is no intersection and or if the <code>t</code> values miss the 
+        min and max <code>t</code> values. Then, we find the leaf node by recursively 
+        going into the left or right node, chosing the node with the smallest 
+        <code>t</code> value and setting the intersection attributes as we go. 
+        Once we've reached a leaf node, we then iterate through the node's primitives 
+        and count the number of intersections as well as return true if we do have 
+        an intersection(s) and false if we don't. To implement 
+        <code>BVHAccel::has_intersection</code>, we had a very similar process, except 
+        we do not update any intersection attributes and we do not check for the 
+        smallest <code>t</code> value, instead we simply return once we have found 
+        an intersection.
+    </p>
+    <div align="middle">
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/task2/BVH-maxplanck.png" width="200px" />
+                        <figcaption>Max Planck</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/task2/BVH-CBlucy.png" width="200px" />
+                        <figcaption>Lucy</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/task2/BVH-cow.png" width="200px" />
+                        <figcaption>Cow</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        We compared the rendering times on the cow, lucy, and Max Planck scenes 
+        with and without BVH acceleration. The cow took 20 seconds to render 
+        without BVH acceleration and 0.0730 seconds with BVH acceleration. Lucy 
+        took a whole 10 minutes to render without BVH acceleration and only took 
+        0.5340 seconds with BVH acceleration. Max Planck took 200 seconds to 
+        render without BVH acceleration and 0.1960 seconds with BVH acceleration.
+    </p>
+    <div align="middle">
+        <table>
+            <tr>
+                <th></th>
+                <th>without BVH</th>
+                <th>with BVH</th>
+            </tr>
+            <tr>
+                <th>Cow</th>
+                <td>20 seconds</td>
+                <td>0.0730 seconds</td>
+            </tr>
+            <tr>
+                <th>CBlucy</th>
+                <td>10 minutes</td>
+                <td>0.5340 seconds</td>
+            </tr>
+            <tr>
+                <th>Max</th>
+                <td>200 seconds</td>
+                <td>0.1960 seconds</td>
+            </tr>
+
+        </table>
+    </div>
+
+
+    <h2 align="middle">Part 3: Direct Illumination</h2>
+
+    <p>
+        There were two different direct lighting techniques
+        we implemented. The first was hemisphere lighting.
+        For this, when a ray intersected a surface several
+        other rays were sent out from the intersection point.
+        The direction of these rays were generated at random
+        from the hemisphere. We then averaged together the
+        light from all these light rays, which gave us an 
+        estimate of the amount of light hitting the object
+        at that intersection point.
+    </p>
+    <p>
+        We also implemented importance sampling. For this,
+        instead of generating the rays at random from the
+        hemisphere, we sampled the rays from the known
+        locations of the light sources in the scene. If these
+        generated rays intersected the scene before they
+        hit the light source then the ray contributed no light.
+        Otherwise is contributed whatever the light emited.
+    </p>
+    <p>
+        Below we have rendered several images with different
+        amount of light samples to compare hemisphere with 
+        importance sampling. All of them were generated with
+        a single sample per pixel. For the hemisphere sampling,
+        it's not until we have 16 light samples that we can even 
+        begin to make out what the image is, and even at 64 light
+        samples, the image still is very noisy. When we compare 
+        this to the importance sampling, even with 1 light sample 
+        the image is more clear than the hemisphere with 64
+        light samples. By the time importance sampling uses 64 
+        light samples the waylls have become completely smooth.
+    </p>
+
+    <div align="middle">
+        <table>
+            <tr>
+                <th></th>
+                <th>Hemisphere</th>
+                <th>Importance</th>
+            </tr>
+            <tr>
+                <th style="font-size:20px">l=1</th>
+                <td>
+                    <img src="images/task3/bunny_l1H.png" width="480px" />
+                </td>
+                <td>
+                    <img src="images/task3/bunny_l1.png" width="480px" />
+                </td>
+            </tr>
+            <tr>
+                <th style="font-size:20px">l=4</th>
+                <td>
+                    <img src="images/task3/bunny_l4H.png" width="480px" />
+                </td>
+                <td>
+                    <img src="images/task3/bunny_l4.png" width="480px" />
+                </td>
+            </tr>
+            <tr>
+                <th style="font-size:20px">l=16</th>
+                <td>
+                    <img src="images/task3/bunny_l16H.png" width="480px" />
+                </td>
+                <td>
+                    <img src="images/task3/bunny_l16.png" width="480px" />
+                </td>
+            </tr>
+            <tr>
+                <th style="font-size:20px">l=64</th>
+                <td>
+                    <img src="images/task3/bunny_l64H.png" width="480px" />
+                </td>
+                <td>
+                    <img src="images/task3/bunny_l64.png" width="480px" />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+
+
+    <h2 align="middle">Part 4: Global Illumination</h2>
+
+    <p>
+        The global lighting function is recursive. The base
+        case happens when the depth in the ray is 1. In
+        this case we return just the direct lighting of that 
+        ray at that interesection point. If the depth is
+        greater than this, then the direct lighting is still
+        calculated but in addition light from a bounced ray
+        is added as well. The direction of this ray is
+        determined from the sample_f function of the bsdf.
+        For the diffuse bsdf in this part, this was
+        cosine weighted sampling. Then this ray was given a 
+        depth of the previous rays depth minus 1, and then 
+        the function was called on this new function.
+    </p>
+    <p>
+        We also implemented russian roullete in order to
+        increase efficiency. That meant that on any given
+        recursive step, there was a chance the recursion
+        would stop. We chose our termination probability
+        to be 0.35. This meant that for every step that
+        did not terminate we also had to weight its
+        output by the continuation probability.
+    </p>
+
+    <div align="middle">
+    <table>
+    <tr>
+        <th>Indirect</th>
+        <th>Global (Both)</th>
+        <th>Direct</th>
+    </tr>
+    <tr>
+        <td>
+        <img src="images/task4/spheres_indirect.png" width="350px" />
+        </td>
+        <td>
+        <img src="images/task4/spheres_global.png" width="350px" />
+        </td>
+        <td>
+        <img src="images/task4/spheres_direct.png" width="350px" />
+        </td>
+    </tr>
+    </table>
+    </div>
+    <p>
+        Here is CBbunny.dae rendered with <code>max_ray_depth</code>
+        set to 0, 1, 2, 3, and 100, all with 1024 samples per pixel.
+    </p>
+    <div align="middle">
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/task4/bunny_1024_m0.png" width="250px" />
+                        <figcaption><code>max_ray_depth</code> = 0</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/task4/bunny_1024_m1.png" width="250px" />
+                        <figcaption><code>max_ray_depth</code> = 1</figcaption>
+                    </figure>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/task4/bunny_1024_m2.png" width="250px" />
+                        <figcaption><code>max_ray_depth</code> = 2</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/task4/bunny_1024_m3.png" width="250px" />
+                        <figcaption><code>max_ray_depth</code> = 3</figcaption>
+                    </figure>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/task4/bunny_1024_m100.png" width="250px" />
+                        <figcaption><code>max_ray_depth</code> = 100</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        Here is the spheres scene rendered with 1, 2, 4, 8, 16, 64, and 1024
+        sample-per-pixel rates, all with 4 light rays.
+    </p>
+    <div align="middle">
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/task4/spheres_1.png" width="250px" />
+                        <figcaption>sample-per-pixel rate = 1</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/task4/spheres_2.png" width="250px" />
+                        <figcaption>sample-per-pixel rate = 2</figcaption>
+                    </figure>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/task4/spheres_4.png" width="250px" />
+                        <figcaption>sample-per-pixel rate = 4</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/task4/spheres_8.png" width="250px" />
+                        <figcaption>sample-per-pixel rate = 8</figcaption>
+                    </figure>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/task4/spheres_16.png" width="250px" />
+                        <figcaption>sample-per-pixel rate = 16</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/task4/spheres_64.png" width="250px" />
+                        <figcaption>sample-per-pixel rate = 64</figcaption>
+                    </figure>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/task4/spheres_1024.png" width="250px" />
+                        <figcaption>sample-per-pixel rate = 1024</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <h2 align="middle">Part 5: Adaptive Sampling</h2>
+
+    <div align="middle">
+    <table style:"width:100%">
+        <tr>
+        <td>
+            <img src="images/task5/spheres.png" width="400px" />
+        </td>
+        <td>
+            <img src="images/task5/spheres_rate.png" width="400px" />
+        </td>
+        </tr>
+        </table>
+    </div>
+
+    <p>
+        We implemented adaptive sampling in the same way as it
+        is described in the documentation. After taking a number
+        of samples equal to the batch size we calculated the mean
+        and standard deviation of the illuminance of the pixel.
+        We calculated a value \( I = 1.96 \cdot \frac{\sigma}{n} \)
+        and if \( I \leq maxTolerance \cdot \mu  \) we would
+        stop sampling. You can see in the images above that the
+        sampling rate is no longer uniform.
+    </p>
+
+</div>
+</body>
 </html>
+
+
+
+

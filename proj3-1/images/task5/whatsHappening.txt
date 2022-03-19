@@ -1,0 +1,2 @@
+spheresWithAnts-->needsManscaping
+*subtracted EPS_F from distToLight
