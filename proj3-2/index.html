@@ -1,7 +1,152 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 3-2 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>  
+    div.padded {  
+      padding-top: 0px;  
+      padding-right: 100px;  
+      padding-bottom: 0.25in;  
+      padding-left: 100px;  
+    }  
+  </style> 
+<title>Gregoria Millensifer and Tristan Streichenberger  |  CS 184</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+</head>
+<body>
+<br />
+<h1 align="middle">Assignment 3-2: PathTracer</h1>
+    <h2 align="middle">Gregoria Millensifer and Tristan Streichenberger</h2>
+
+    <div class="padded">
+        <p>In this project, we added reflect and refract BSDFs which allowed us to render 
+            scenes with glass and mirror objects. We also implemented a thin lense to enable 
+            the depth of field effect in our scences.
+        </p>
+    <h2 align="middle">Part 1: Mirror and Glass Materials</h2>
+        <p>Here is a sequence of six images of scene CBspheres.dae rendered with 
+            <code>max_ray_depth</code> set to 0, 1, 2, 3, 4, 5, and 100. The other 
+            settings should are 64 samples per pixel and 4 samples per light. For 
+            the first few images, we have drawn red arrows that represent ray 
+            bounces and have labelled the arrows numerically in order. </p>
+        <div align="center">
+            <figure>
+                <img src="images/part1/m0.png" width="400px"/>
+                <figcaption>Figure 1.a: <code>max_ray_depth</code> = 0</figcaption>
+            </figure>
+            <p>Figure 1.a shows just the light source because there are no ray bounces, 
+                which means only light sources will be shown.
+            </p>
+            
+            <figure>
+                <img src="images/part1/m1.png" width="400px" />
+                <figcaption>Figure 1.b: <code>max_ray_depth</code> = 1</figcaption>
+            </figure>
+            <p>In figure 1.b, we begin to see the balls as well as the walls, however 
+                the ceiling still cannot be seen. We can see the walls because it only 
+                takes one bouce from the light source to the walls. We can only see the 
+                light source on the balls because that is also one bounce. To see the 
+                rest of the room on the balls, we would need more bounces to get from 
+                the light source to the other things in the scene and then onto the balls.
+            </p>
+
+            <figure>
+                <img src="images/part1/m2.png" width="400px"/>
+                <figcaption>Figure 1.c: <code>max_ray_depth</code> = 2</figcaption>
+            </figure>
+            <p>In figure 1.c, we now can see the walls on the ball, however, we still 
+                cannot see the ceiling on the balls. This is because the walls on the 
+                balls only need 2 bounces: from light source to a wall and then to the 
+                ball. Whereas for the ceiling to show up on the balls, we still need 
+                one more bounce. Futhermore, for the glass ball in the front of the 
+                scene, it is still mostly black. This is because we still need one 
+                more bounce for the light refraction to show up.
+            </p>
+
+            <figure>
+                <img src="images/part1/m3.png" width="400px" />
+                <figcaption>Figure 1.d: <code>max_ray_depth</code> = 3</figcaption>
+            </figure>
+            <p>In figure 1.d, we are now able to see the whole scence, with everything 
+                being reflected onto the metal ball and refracted through the glass ball. 
+                Since 3 bounces are sufficient for this scene, adding more bounces still 
+                shows the same scene with the same effects, as shown below.
+            </p>
+
+        <table>
+            <tr>
+                <td>
+                    <figure>
+                        <img src="images/part1/m4.png" width="250px"/>
+                        <figcaption>Figure 1.e: <code>max_ray_depth</code> = 4</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/part1/m5.png" width="250px" />
+                        <figcaption>Figure 1.f: <code>max_ray_depth</code> = 5</figcaption>
+                    </figure>
+                </td>
+                <td>
+                    <figure>
+                        <img src="images/part1/m100.png" width="250px"/>
+                        <figcaption>Figure 1.g: <code>max_ray_depth</code> = 100</figcaption>
+                    </figure>
+                </td>
+            </tr>
+        </table>
+        </div>
+    
+    <h2 align="middle">Part 4: Depth of Field</h2>
+        <p>A thin lens camera takes in light from across
+            its circular lens. If an object the lens is looking
+            at is at the plane of focus, then all of the rays going
+            through the lens will converge of the object at the same
+            point. If an object is further or closer than this plane
+            of focus than the light rays going through this lens will
+            all hit different points in the scene. When these rays
+            are averaged together for a single pixel it gives an average
+            over an area. This creates the blurring effect of things
+            that are out of focus.</p>
+        <p>
+            With a larger aperture, the rays that are heading for
+            the same plane will be even more spread apart which
+            leads to increased blurring. You can see these in
+            Figures 4.e-h. As the aperture increases the background
+            becomes more blurry
+        </p>
+        <p>
+            A pinhole camera is the same as a thin lens camera
+            that has an aperture size of zero. All of the rays
+            for a specific pixel travel through the lens at the
+            same point and therefore they don't create the blurring
+            effects of light rays that are hitting the lens in different
+            places.
+        </p>
+
+    <div align="middle">
+        <img src="images/part4/0_05/1_0-0_05.png" width="600px" />
+        <figcaption>Figure 4.a: Focal Plane 1</figcaption>
+        <img src="images/part4/0_05/1_4-0_05.png" width="600px" />
+        <figcaption>Figure 4.b: Focal Plane 1.4</figcaption>
+        <img src="images/part4/0_05/1_6-0_05.png" width="600px" />
+        <figcaption>Figure 4.c: Focal Plane 1.6</figcaption>
+        <img src="images/part4/0_05/2_0-0_05.png" width="600px" />
+        <figcaption>Figure 4.d: Focal Plane 2</figcaption>
+
+        <img src="images/part4/Coil-0.png" width="600px" />
+        <figcaption>Figure 4.e: Pinhole Camera</figcaption>
+        <img src="images/part4/Coil-0.05.png" width="600px" />
+        <figcaption>Figure 4.f: Aperature 0.05</figcaption>
+        <img src="images/part4/Coil-0.15.png" width="600px" />
+        <figcaption>Figure 4.g: Aperature 0.15</figcaption>
+        <img src="images/part4/Coil-0.2.png" width="600px" />
+        <figcaption>Figure 4.h: Aperature 0.2</figcaption>
+    </div>
+</div>
+</body>
 </html>
+
+
+
+
