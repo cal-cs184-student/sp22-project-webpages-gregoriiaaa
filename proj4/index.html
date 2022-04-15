@@ -1,7 +1,412 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 4 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184 Mesh Editor</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2017</h1>
+<h1 align="middle">Project 4: Cloth Simulator</h1>
+<h2 align="middle">Gregoria Millensifer, Tristan Streichenberger, CS184-??</h2>
+
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the project.</p>
+
+<h2 align="middle">Part 1: Masses and springs</h2>
+
+<p>
+  Bending and structural constraints both act on point masses
+  in the horizontal and vertical directions, while shearing
+  acts on diagonal point masses. This is why when shearing 
+  is turned off we see the diagonal lines disappear and when
+  only shearing is on, we see only diagonal lines.
+</p>
+
+<table align="center">
+  <tr>
+    <td align = "center">All Constraints </td>
+    <td align = "center">No Constraints</td>
+  </tr>
+  <tr>
+    <td>
+      <img src="imgs/part1/all-constaints.png" width=400>
+    </td>
+    <td>
+      <img src="imgs/part1/no-constraints.png" width=400>
+    </td>
+  </tr>
+  <tr>
+    <td align = "center">Only Shearing</td>
+    <td align = "center">No Shearing</td>
+  </tr>
+  <td>
+    <img src="imgs/part1/only-shearing.png" width=400>
+  </td>
+  <td>
+    <img src="imgs/part1/without-shearing.png" width=400>
+  </td>
+</tr>
+</table>
+
+
+
+<h2 align="middle">Part 2: Simulation via numerical integration</h2>
+
+<p>Varying the spring constant ks, changes the taughtness
+  of the cloth. With a low ks like 5, the cloth is very
+  loose. It bows into a vew low arch and has many ripples.
+  As the spring constant increases to 500 and then to 50,000,
+  the arch shrinks until its nearly flat and the number of 
+  ripples decreases. If you turn the spring constant too high 
+  it gets to a point where the forces the springs are applying
+  are so great that the cloth is constantly flung around and
+  never settles.
+</p>
+
+<table align="center">
+  <tr>
+    <td align = "center">ks = 5 </td>
+    <td align = "center">ks = 500 </td>
+  </tr>
+  <tr>
+    <td>
+      <img src="imgs/part2/ks-5.png" width=400>
+    </td>
+    <td>
+      <img src="imgs/part2/ks-500.png" width=400>
+    </td>
+  </tr>
+  <tr>
+    <td align = "center">ks = 50,000 </td>
+    <td align = "center">ks = 500,000 </td>
+  </tr>
+  <td>
+    <img src="imgs/part2/ks-50000.png" width=400>
+  </td>
+  <td>
+    <img src="imgs/part2/ks-500000.gif" width=400>
+  </td>
+</tr>
+</table>
+
+<p>Varying the density is like the opposite of varying
+  the spring constant. Low desnities produce similar effects
+  to high spring constants and high densities produce similar
+  effects to low spring constants. This is because acceleration
+  can be described by this equation: \(a = \frac{F}{m}\).
+  We can replace Force with Hooke's law giving: 
+  \( a = \frac{k(l -x)}{m} \). We can see that the acceleration
+  of each point mass in the cloth is proportional to the spring
+  constant and inversely proportional to its mass. This is why
+  density and the spring constant have inverse effects.
+</p>
+
+<table align="center">
+  <tr>
+    <td align = "center">density = 1 </td>
+    <td align = "center">density = 15 </td>
+  </tr>
+  <tr>
+    <td>
+      <img src="imgs/part2/ds-1.png" width=400>
+    </td>
+    <td>
+      <img src="imgs/part2/ds-15.png" width=400>
+    </td>
+  </tr>
+  <tr>
+    <td align = "center">density = 1,500 </td>
+    <td align = "center">density = 150,000 </td>
+  </tr>
+  <td>
+    <img src="imgs/part2/ds-1500.png" width=400>
+  </td>
+  <td>
+    <img src="imgs/part2/ds-150000.png" width=400>
+  </td>
+</tr>
+</table>
+
+<p>Verying the damping has very different effects than
+  the two parameters above. Damping seems to effect mostly
+  the speed at which the cloth moves. Low damping allows
+  the cloth to swing down rapidly and then continue oscillating
+  for a while. At the extreme where the damping is 0 the cloth 
+  oscillates forever, never coming to rest. With high damping
+  the cloth falls down slowly as if it were going through water.
+</p>
+
+<h2 align="middle">Part 3: Handling collisions with other objects</h2>
+<div align="middle">
+  <table>
+    <tr>
+        <td>
+            <figure>
+                <img src="imgs/part3/5000.png" width="250px"/>
+                <figcaption>Figure 1.a: <code>ks = 5000</code></figcaption>
+            </figure>
+        </td>
+        <td>
+            <figure>
+                <img src="imgs/part3/500.png" width="250px" />
+                <figcaption>Figure 1.b: <code>ks = 500</code></figcaption>
+            </figure>
+        </td>
+        <td>
+            <figure>
+                <img src="imgs/part3/50000.png" width="250px"/>
+                <figcaption>Figure 1.c: <code>ks = 50000</code></figcaption>
+            </figure>
+        </td>
+    </tr>
+  </table>
+</div>
+<p>
+  Comparing Figure 1.a, the sphere is using the default <code>ks = 5000</code>, and 
+  Figure 1.b, where <code>ks = 500</code>, Figure 1.b looks more droopy and Figure 
+  1.a has larger folds. Figure 1.c, where <code>ks = 50000</code>, has even larger 
+  folds than 1.a and the cloth doesn't follow the sphere's shape as well as the cloth 
+  in Figure 1.a.
+</p>
+<figure align="middle">
+  <img src="imgs/part3/cloth-on-plane.png" width="400px" />
+  <figcaption>Our shaded cloth lying peacefully at rest on the plane</figcaption>
+</figure>
+
+<h2 align="middle">Part 4: Handling self-collisions</h2>
+<figure align="middle">
+  <img src="imgs/part4/Falling-Cloth.gif" width="400px" />
+  <figcaption>Our cloth falling and folding on itself</figcaption>
+</figure>
+<table align="middle">
+  <tr>
+      <td>
+          <figure>
+              <img src="imgs/part4/pt4-videos/d-15_ks-5000.mov" width="250px"/>
+              <figcaption>Figure 4.a: d=15, ks=5000</figcaption>
+          </figure>
+      </td>
+      <td>
+          <figure>
+              <img src="imgs/part4/pt4-videos/d-15_ks-500.mov" width="250px" />
+              <figcaption>Figure 4.b: d=15, ks=500</figcaption>
+          </figure>
+      </td>
+      <td>
+          <figure>
+              <img src="imgs/part4/pt4-videos/d-15_ks-50000.mov" width="250px"/>
+              <figcaption>Figure 4.c: d=15, ks=50000</figcaption>
+          </figure>
+      </td>
+  </tr>
+  <tr>
+    <td>
+        <figure>
+            <img src="imgs/part4/pt4-videos/d-1p5_ks-5000.mov" width="250px"/>
+            <figcaption>Figure 4.a: d=1.5, ks=5000</figcaption>
+        </figure>
+    </td>
+    <td>
+        <figure>
+            <img src="imgs/part4/pt4-videos/d-150_ks-5000.mov" width="250px" />
+            <figcaption>Figure 4.b: d=150, ks=5000</figcaption>
+        </figure>
+    </td>
+</tr>
+</table>
+<p>
+  As seen above, a higher density causes the cloth to fold into itself with 
+  sharper creases. Similarly, lowering the ks also causes the cloth to fold 
+  into iteself with sharper creases.
+</p>
+
+
+<h2 align="middle">Part 5: Shaders</h2>
+
+<p>
+  Shaders are used to parallize graphics computations 
+  through the GPU. With openGL, .vert files calculate the
+  screen space position of a vertex as well as other things
+  that could be useful like the object space position. If any
+  alterions to the geometry are needed they are done there. 
+  Then the .frag file is used to calculate the color of pixels
+  after rasterization. It can use things that were calculated
+  by the .vert. Since both of these files act on very small 
+  isolated elements of the image, it can be easily parallelized
+  on the GPU.
+</p>
+
+<p>
+  Many of the shaders we implemented in this section, made
+  use of Blinn-Phong shading. It can be described with the
+  following equation
+  \[
+    L = k_aI_a 
+    \ + \ k_d\left(\frac{I}{r^2}\right)\textrm{max}(0,n\cdot l)
+    \ + \ k_s\left(\frac{I}{r^2}\right)\textrm{max}(0,n\cdot h)^p
+  \]
+  This equation has a lot of components but it can be thought 
+  of as just suming together light from three different
+  sources. The left most component is the ambient light. 
+  All fragments will receive this ambient light equally.
+  The middle is the diffuse term. This accounts for light
+  that is dispersed when it hits the object. It depends on 
+  \(n \cdot l\) where \(l\) is the direction of the incoming light
+  ray and \(n\) is the normal. This is term is maximized
+  when the incoming light is parallel to the normal. In other
+  words, when the light is orthogonal to the surface. The 
+  right-most term is the specular component. This accounts
+  for light that reflects off the surface like a mirror. 
+  Specular light reflects incoming rays about the surface
+  normal, so that the surface normal bisects the incoming
+  and outgoing rays. This is way there is an \(n \cdot h\)
+  term. \(h\) is the bisector of the incoming and outgoing
+  rays, therefore the specular light is maximized when the 
+  incoming and outgoing light rays are bisected by the normal.
+  The exponent \(p\) is used to sharpen the specular
+  reflection. Since \(n \cdot h \leq 1 \), the higher the 
+  power \(p\) the smaller it the specular component will be.
+  Only reflections that are very close to perfectly specular
+  will retain any power.
+</p>
+
+<table align="center">
+  <tr>
+    <td align = "center">Ambient</td>
+    <td align = "center">Diffuse</td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="imgs/part5/phong-ambient.png" height=400>
+    </td>
+    <td align="center">
+      <img src="imgs/part5/phong-diffuse.png" height=400>
+    </td>
+  </tr>
+  <tr>
+    <td align = "center">Specular</td>
+    <td align = "center">Phong</td>
+  </tr>
+  <td align="center">
+    <img src="imgs/part5/phong-specular.png" height=400>
+  </td>
+  <td align="center">
+    <img src="imgs/part5/phong-all.png" height=400>
+  </td>
+</tr>
+</table>
+
+<figure align="middle">
+  <img src="imgs/part5/custom-texture.png" width="300px" />
+  <figcaption>Our texture mapping shader using our own custom texture</figcaption>
+</figure>
+
+<table align="middle">
+  <tr>
+      <td>
+          <figure>
+              <img src="imgs/part5/sphere-bump.png" width="250px"/>
+              <figcaption>Figure 5.a: Bump mapping</figcaption>
+          </figure>
+      </td>
+      <td>
+          <figure>
+              <img src="imgs/part5/cloth-bump.png" width="250px" />
+              <figcaption>Figure 5.b: Bump mapping</figcaption>
+          </figure>
+      </td>
+      <td>
+          <figure>
+              <img src="imgs/part5/displacement.png" width="250px"/>
+              <figcaption>Figure 5.c: Displacement mapping</figcaption>
+          </figure>
+      </td>
+  </tr>
+</table>
+<p>
+  As seen above, while you can see the texture on both the sphere using 
+  either bump or displacement mapping, the latter shows the actual shape 
+  on the cloth, too. You can most notice this effect in by comparing the 
+  cloth's crease in Figure 5.b and 5.c. In bump mapping, we are mapping 
+  the texture onto the objects in such a way that forms an illusion of 
+  detail, while in displacement mapping, we map the actual height of the 
+  detail.
+</p>
+<table align="center">
+  <tr>
+      <td>
+          <figure>
+              <img src="imgs/part5/bump-o16-a16.png" width="300px"/>
+              <figcaption>Figure 5.d: Bump mapping with -o 16 -a 16</figcaption>
+          </figure>
+      </td>
+      <td>
+          <figure>
+              <img src="imgs/part5/bump-o128-a128.png" width="300px" />
+              <figcaption>Figure 5.e: Bump mapping with -o 128 -a 128</figcaption>
+          </figure>
+      </td>
+  </tr>
+  <tr>
+    <td>
+        <figure>
+            <img src="imgs/part5/displacement-o16-a16.png" width="300px"/>
+            <figcaption>Figure 5.f: Displacement mapping with -o 16 -a 16</figcaption>
+        </figure>
+    </td>
+    <td>
+        <figure>
+            <img src="imgs/part5/displacement-o128-a128.png" width="300px" />
+            <figcaption>Figure 5.g: Displacement mapping with -o 128 -a 128</figcaption>
+        </figure>
+    </td>
+</tr>
+</table>
+<p>
+  Comparing Figures 5.d and 5.e to Figures 5.f and 5.g respectively, we see that 
+  chaning the sphere mesh's coarness from 16 to 128 causes the texture of the 
+  cloth look more stretched out around the sphere.
+</p>
+
+<table align="center">
+  <tr>
+      <td>
+          <figure>
+              <img src="imgs/part5/sphere-mirror.png" width="350px"/>
+              <figcaption>Figure 5.h: Mirror</figcaption>
+          </figure>
+      </td>
+      <td>
+          <figure>
+              <img src="imgs/part5/cloth-mirror.png" width="350px" />
+              <figcaption>Figure 5.i: Mirror</figcaption>
+          </figure>
+      </td>
+  </tr>
+</table>
+
+</body>
 </html>
